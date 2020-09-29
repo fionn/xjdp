@@ -14,6 +14,8 @@ name = "xjdp" # pylint: disable=invalid-name
 __title__ = name
 __version__ = "0.0.1"
 
+BASE_URL = "https://xjdp.aspi.org.au/data/"
+
 Coordinates = NamedTuple("Coordinates", [("lat", float), ("long", float)])
 
 class FType(enum.Enum):
@@ -36,6 +38,7 @@ class Feature:
         self.county = data["county"]
         self.text = data["text"]
         self.type = data["type"]
+        self.url = f"{BASE_URL}?marker={self.id}"
         try:
             self.image_url = data["gallery"][0]["url"]
         except TypeError:
@@ -58,7 +61,7 @@ class XJDP:
     """Interface for the XJDP API"""
 
     def __init__(self) -> None:
-        self.base_url = "https://xjdp.aspi.org.au/data/"
+        self.base_url = BASE_URL
         self.session = requests.Session()
 
     def get(self, path: str) -> dict:
