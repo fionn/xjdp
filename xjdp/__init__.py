@@ -38,7 +38,7 @@ class Feature:
         self.county = data["county"]
         self.text = data["text"]
         self.type = data["type"]
-        self.url = f"{BASE_URL}?marker={self.id}"
+        self.url = f"{BASE_URL}?marker={self.id}&tab=data"
         try:
             self.image_url = data["gallery"][0]["url"]
         except TypeError:
