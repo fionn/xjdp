@@ -36,7 +36,7 @@ class Feature:
         self.geo = Coordinates(data["coords"][0], data["coords"][1])
         self.prefecture = data["prefecture"]
         self.county = data["county"]
-        self.text = data["text"]
+        self.text = self._text()
         self.type = data["type"]
         self.url = f"{BASE_URL}?marker={self.id}&tab=data"
         try:
@@ -46,6 +46,12 @@ class Feature:
 
     def __repr__(self) -> str:
         return f"<XJDP {self.id} {self.title}>"
+
+    def _text(self) -> str:
+        text = self.data["text"]
+        if text[-3:] == ". .":
+            text = text[:-2]
+        return text.replace("  ", " ")
 
     @lru_cache
     def image_file(self) -> IO[bytes]:
