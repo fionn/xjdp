@@ -36,13 +36,18 @@ class Feature:
         self.geo = Coordinates(data["coords"][0], data["coords"][1])
         self.prefecture = data["prefecture"]
         self.county = data["county"]
-        self.text = self._text()
         self.type = data["type"]
         self.url = f"{BASE_URL}?marker={self.id}&tab=data"
+
         try:
             self.image_url = data["gallery"][0]["url"]
         except TypeError:
             self.image_url = None
+
+        try:
+            self.text = self._text()
+        except TypeError:
+            self.text = ""
 
     def __repr__(self) -> str:
         return f"<XJDP {self.id} {self.title}>"
