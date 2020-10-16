@@ -5,7 +5,7 @@ import enum
 import random
 import tempfile
 from functools import lru_cache
-from typing import cast, NamedTuple, Iterator, IO
+from typing import List, Dict, Any, NamedTuple, Iterator, IO, cast
 
 import requests
 
@@ -76,22 +76,22 @@ class XJDP:
         response.raise_for_status()
         return response.json()
 
-    def get_timeline(self) -> list:
+    def get_timeline(self) -> List[dict]:
         """Get timeline data"""
         return cast(list, self.get("timeline.json"))
 
-    def get_global(self) -> dict:
+    def get_global(self) -> Dict[str, Any]:
         """Get global data"""
         return self.get("global.json")
 
     @lru_cache
-    def markers(self, ftype: FType = FType.CAMP) -> list:
+    def markers(self, ftype: FType = FType.CAMP) -> List[Dict[str, Any]]:
         """Grab all the datapoints, filtering by feature type"""
         markers = self.get("map/markers.geo.json")["features"]
         return [x for x in markers if x["properties"]["type"] == ftype.value]
 
     @lru_cache
-    def _get_data_by_id(self, feature_id: int, ftype: FType) -> dict:
+    def _get_data_by_id(self, feature_id: int, ftype: FType) -> Dict[str, Any]:
         """Return detailed information for a given camp"""
         return self.get(f"map/{ftype.value}/{feature_id}.json")
 
@@ -99,7 +99,7 @@ class XJDP:
         """Instantiate a Feature object for a given marker"""
         return Feature(self._get_data_by_id(feature_id, ftype))
 
-    def get_features(self, ftype: FType = FType.CAMP) -> Iterator:
+    def get_features(self, ftype: FType = FType.CAMP) -> Iterator[Feature]:
         """Like get_markers, but returns an iterator of Features"""
         for marker in self.markers(ftype):
             yield self.get_feature_by_id(marker["properties"]["ID"], ftype)
