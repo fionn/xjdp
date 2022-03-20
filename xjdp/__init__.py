@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """Object-oriented features in Xinjiang"""
 
+import os
 import enum
 import random
 import tempfile
 from functools import lru_cache
-from typing import List, Dict, Any, NamedTuple, Iterator, IO, cast
+from typing import Any, NamedTuple, Iterator, IO, cast
 
-import requests
+import requests  # type: ignore
 
-name = "xjdp" # pylint: disable=invalid-name
+name = "xjdp"  # pylint: disable=invalid-name
 
 __title__ = name
 __version__ = "0.0.1"
 
-BASE_URL = "https://xjdp.aspi.org.au/data/"
+DOMAIN = os.environ.get("XJDP_DOMAIN") or "xjdp.aspi.org.au"
+PROTOCOL = os.environ.get("XJDP_PROTOCOL") or "https"
+BASE_URL = f"{PROTOCOL}://{DOMAIN}/data/"
+CANONICAL_BASE_URL = "https://xjdp.aspi.org.au/data/"
 
 Coordinates = NamedTuple("Coordinates", [("lat", float), ("long", float)])
 
@@ -22,7 +26,7 @@ class FType(enum.Enum):
     """Allowed feature types"""
     CAMP = "camp"
     CULTURAL = "cultural"
-    MOSQUE = "cultural" # Mosque is classified as cultural
+    MOSQUE = "cultural"  # Mosque is classified as cultural
 
 # pylint: disable=too-few-public-methods,too-many-instance-attributes
 class Feature:
@@ -30,14 +34,14 @@ class Feature:
 
     def __init__(self, data: dict) -> None:
         self.data = data
-        self.id = data["ID"] # pylint: disable=invalid-name
+        self.id = data["ID"]  # pylint: disable=invalid-name
         self.original_id = data["originalID"]
         self.title = data["title"]
-        self.geo = Coordinates(data["coords"][0], data["coords"][1])
+        self.geo = Coordinates(*data["coords"])
         self.prefecture = data["prefecture"]
         self.county = data["county"]
         self.type = data["type"]
-        self.url = f"{BASE_URL}?marker={self.id}&tab=data"
+        self.url = f"{CANONICAL_BASE_URL}?marker={self.id}&tab=data"
 
         try:
             self.image_url = data["gallery"][0]["url"]
@@ -63,7 +67,7 @@ class Feature:
         """Get the satellite image"""
         response = requests.get(self.image_url)
         response.raise_for_status()
-        image_file = tempfile.NamedTemporaryFile(suffix=".jpg")
+        image_file = tempfile.NamedTemporaryFile(suffix=".jpg")  # pylint: disable=consider-using-with
         image_file.write(response.content)
         image_file.seek(0)
         return image_file
@@ -81,22 +85,22 @@ class XJDP:
         response.raise_for_status()
         return response.json()
 
-    def get_timeline(self) -> List[dict]:
+    def get_timeline(self) -> list[dict]:
         """Get timeline data"""
         return cast(list, self.get("timeline.json"))
 
-    def get_global(self) -> Dict[str, Any]:
+    def get_global(self) -> dict[str, Any]:
         """Get global data"""
         return self.get("global.json")
 
     @lru_cache
-    def markers(self, ftype: FType = FType.CAMP) -> List[Dict[str, Any]]:
+    def markers(self, ftype: FType = FType.CAMP) -> list[dict[str, Any]]:
         """Grab all the datapoints, filtering by feature type"""
         markers = self.get("map/markers.geo.json")["features"]
         return [x for x in markers if x["properties"]["type"] == ftype.value]
 
     @lru_cache
-    def _get_data_by_id(self, feature_id: int, ftype: FType) -> Dict[str, Any]:
+    def _get_data_by_id(self, feature_id: int, ftype: FType) -> dict[str, Any]:
         """Return detailed information for a given camp"""
         return self.get(f"map/{ftype.value}/{feature_id}.json")
 

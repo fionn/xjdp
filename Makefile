@@ -8,7 +8,7 @@ $(VENV): requirements.txt
 
 .PHONY: install
 install: requirements.txt $(SRC)
-	@pip install --user --require-hashes -r $<
+	@pip install --user -r $<
 	@pip install --user --no-deps .
 
 .PHONY: install_dev
@@ -20,7 +20,7 @@ tags: $(SRC)
 
 .PHONY: outdated
 outdated:
-	@source $(VENV)/bin/activate && pip list --outdated
+	@source $(VENV)/bin/activate && pip list --$@
 
 .PHONY: lint
 lint:
